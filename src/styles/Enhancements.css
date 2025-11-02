@@ -130,6 +130,36 @@
   margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+  .c-navbar-wrapper.is-menu-open {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: visible !important;
+  }
+
+  .c-navbar-wrapper {
+    overflow: visible !important;
+  }
+
+  .c-navbar-wrapper::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .c-navbar-wrapper.is-menu-open::after {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .c-navbar {
   position: relative;
   display: flex;
@@ -223,6 +253,59 @@
   opacity: 0;
   pointer-events: none;
   z-index: 1;
+}
+
+.c-navbar__toggle {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(30, 29, 41, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--c-color-dark);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  padding: 0;
+}
+
+.c-navbar__toggle:hover,
+.c-navbar__toggle:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(30, 29, 41, 0.18);
+  background: rgba(255, 255, 255, 1);
+}
+
+.c-navbar__toggle:focus-visible {
+  outline: 3px solid rgba(255, 69, 0, 0.35);
+  outline-offset: 3px;
+}
+
+.c-navbar__toggle-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.25s ease;
+  position: relative;
+}
+
+.c-navbar__toggle.is-open .c-navbar__toggle-bar:nth-of-type(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.c-navbar__toggle.is-open .c-navbar__toggle-bar:nth-of-type(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.c-navbar__toggle.is-open .c-navbar__toggle-bar:nth-of-type(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .c-contador {
@@ -393,19 +476,140 @@
   font-family: var(--c-body-font);
 }
 
+@media (max-width: 960px) {
+  .c-navbar__blob {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .c-navbar {
+    position: relative;
     width: 100%;
-    justify-content: center;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    filter: none;
+    background: rgba(255, 255, 255, 0.95);
+    overflow: visible !important;
+    z-index: 10000;
   }
 
-  .c-navbar__link {
+  .c-navbar--open {
+    box-shadow: 0 18px 32px rgba(30, 29, 41, 0.16);
+  }
+
+  .c-navbar {
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    z-index: 10000;
+  }
+
+  .c-navbar__toggle {
+    display: flex;
+    align-self: flex-end;
+    z-index: 10001;
+    position: relative;
+  }
+
+  .c-navbar__list {
+    position: fixed !important;
+    top: clamp(72px, 9vh, 96px) !important;
+    right: clamp(1rem, 5vw, 2.25rem) !important;
+    left: auto !important;
+    bottom: auto !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+    padding: 1rem !important;
+    width: min(86vw, 320px) !important;
+    min-width: 220px !important;
+    max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 40px rgba(17, 24, 39, 0.24) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-8px) scale(0.95) !important;
+    transition: opacity 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    z-index: 10000 !important;
+    margin: 0 !important;
+    list-style: none !important;
+    visibility: hidden !important;
+  }
+
+  .c-navbar__list--open {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+    visibility: visible !important;
+  }
+
+  .c-navbar__item {
+    flex: none;
+    display: block !important;
     width: 100%;
-    padding: 0.65rem 1.25rem;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .c-navbar__link,
+  .c-navbar__link--action {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.95) !important;
+    padding: 0.85rem 1.25rem !important;
+    color: #1e1d29 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    text-decoration: none !important;
+    line-height: 1.4 !important;
+    min-height: 44px !important;
+    border: none !important;
+    outline: none !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+  }
+
+  .c-navbar__link--action {
+    margin-top: 0.35rem;
+    background: linear-gradient(135deg, #ff8b5e 0%, #f36bbb 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(243, 107, 187, 0.3) !important;
+  }
+
+  .c-navbar__link:hover,
+  .c-navbar__link:focus-visible {
+    background: rgba(255, 139, 94, 0.15) !important;
+    color: #1e1d29 !important;
+    transform: translateX(4px) !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .c-navbar__link.is-active {
+    color: #ff8b5e !important;
+    background: rgba(255, 139, 94, 0.15) !important;
+    font-weight: 700 !important;
+  }
+
+  .c-navbar__link.is-active:hover {
+    background: rgba(255, 139, 94, 0.2) !important;
+  }
+
+  .c-navbar__blob {
     display: none;
   }
 

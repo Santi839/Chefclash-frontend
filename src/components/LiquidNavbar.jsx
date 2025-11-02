@@ -1,8 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
   const navRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDesktopView, setIsDesktopView] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !window.matchMedia('(max-width: 768px)').matches;
+  });
+
+  const isMobileViewport = () =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
   const navigationItems = [
     { key: 'home', label: 'Inicio', to: '/', end: true, type: 'link' },
@@ -21,6 +29,7 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
   ];
 
   const updateBlob = (event) => {
+    if (isMobileViewport()) return;
     const nav = navRef.current;
     if (!nav) return;
     const blob = nav.querySelector('.c-navbar__blob');
@@ -40,6 +49,7 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
   };
 
   const hideBlob = () => {
+    if (isMobileViewport()) return;
     const nav = navRef.current;
     if (!nav) return;
     const blob = nav.querySelector('.c-navbar__blob');
@@ -49,13 +59,89 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
     });
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen((previous) => {
+      const next = !previous;
+      if (!next) {
+        hideBlob();
+      }
+      return next;
+    });
+  };
+
+  const handleResponsiveClose = () => {
+    if (isMobileViewport()) {
+      setIsMenuOpen(false);
+      hideBlob();
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const handleResize = () => {
+      const isMobile = isMobileViewport();
+      setIsDesktopView(!isMobile);
+      if (!isMobile) {
+        setIsMenuOpen(false);
+        hideBlob();
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport() || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const { body } = document;
+    body.style.overflow = isMenuOpen ? 'hidden' : '';
+
+    return () => {
+      body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!isMenuOpen || typeof window === 'undefined') return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+        hideBlob();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  const handleBackdropClick = (event) => {
+    if (isMenuOpen && event.target === event.currentTarget) {
+      setIsMenuOpen(false);
+      hideBlob();
+    }
+  };
+
   return (
-    <div className="c-navbar-wrapper">
+    <div
+      className={`c-navbar-wrapper${isMenuOpen ? ' is-menu-open' : ''}`}
+      onClick={handleBackdropClick}
+    >
       <nav
-        className="c-navbar"
+        className={`c-navbar${isMenuOpen ? ' c-navbar--open' : ''}`}
         ref={navRef}
         aria-label="Navegación principal mejorada"
         onMouseLeave={hideBlob}
+        onClick={(e) => e.stopPropagation()}
       >
         <svg className="c-navbar__goo-fx" width="0" height="0" aria-hidden="true">
           <filter id="c-goo">
@@ -69,7 +155,24 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
             <feBlend in="SourceGraphic" in2="goo" />
           </filter>
         </svg>
-        <ul className="c-navbar__list">
+        {!isDesktopView && (
+          <button
+            type="button"
+            className={`c-navbar__toggle${isMenuOpen ? ' is-open' : ''}`}
+            aria-expanded={isMenuOpen}
+            aria-controls="primary-navigation"
+            aria-label={isMenuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'}
+            onClick={toggleMenu}
+          >
+            <span aria-hidden="true" className="c-navbar__toggle-bar" />
+            <span aria-hidden="true" className="c-navbar__toggle-bar" />
+            <span aria-hidden="true" className="c-navbar__toggle-bar" />
+          </button>
+        )}
+        <ul
+          id="primary-navigation"
+          className={`c-navbar__list${isMenuOpen ? ' c-navbar__list--open' : ''}`}
+        >
           {navigationItems.map((item) => {
             const commonProps = {
               onMouseEnter: updateBlob,
@@ -93,7 +196,12 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
                     className={({ isActive }) =>
                       `${commonProps.className}${isActive ? ' is-active' : ''}`
                     }
-                    style={({ isActive }) => ({ color: isActive ? 'var(--c-color-primary)' : 'var(--c-color-dark)' })}
+                    style={({ isActive }) => 
+                      isMobileViewport() 
+                        ? {} 
+                        : { color: isActive ? 'var(--c-color-primary)' : 'var(--c-color-dark)' }
+                    }
+                    onClick={handleResponsiveClose}
                   >
                     {item.label}
                   </NavLink>
@@ -102,7 +210,12 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
                     type="button"
                     {...commonProps}
                     className={`${commonProps.className} c-navbar__link--action`}
-                    onClick={item.onClick}
+                    onClick={(event) => {
+                      if (typeof item.onClick === 'function') {
+                        item.onClick(event);
+                      }
+                      handleResponsiveClose();
+                    }}
                   >
                     {item.label}
                   </button>
@@ -111,7 +224,7 @@ function LiquidNavbar({ isAdmin, isLogged, onLogout }) {
             );
           })}
         </ul>
-        <span className="c-navbar__blob" aria-hidden="true" />
+        {isDesktopView && <span className="c-navbar__blob" aria-hidden="true" />}
       </nav>
     </div>
   );
